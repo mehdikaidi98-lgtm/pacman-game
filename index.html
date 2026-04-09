@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>Mehdi Pacman - Cyber Style</title>
+    <title>Mehdi Pacman - Cyber Face Edition</title>
     <style>
         body {
             background-color: #000;
@@ -82,49 +82,55 @@
             box-shadow: 0 0 15px #ffff00; 
         }
         
-        /* --- STYLE CYBER-NÉON DES MÉCHANTS (Les Fantômes) --- */
+        /* --- NOUVEAU STYLE CYBER-VISAGE DES FANTÔMES --- */
         .ghost { 
-            border-radius: 10px 10px 0 0; 
-            /* Forme moderne et lisse comme ton image */
+            border-radius: 12px 12px 0 0; 
             transform: scale(0.95); 
-            transition: all 0.2s;
-            opacity: 0.9; /* Légère transparence hologramme */
+            opacity: 0.95;
+            position: relative; /* Pour positionner les yeux */
+            display: flex; /* Centrer les yeux */
+            justify-content: space-around;
+            padding-top: 5px;
+            color: #000; /* Yeux et bouche en noir */
         }
         
-        /* Blinky (Rouge) - Lueur d'alerte */
-        .blinky { 
-            background-color: #ff0000; 
-            box-shadow: 0 0 15px #ff0000, 0 0 5px #ff0000 inset; 
+        /* Les yeux Cyber (en noir) */
+        .ghost::before, .ghost::after {
+            content: '';
+            width: 5px;
+            height: 5px;
+            background-color: #000;
+            border-radius: 50%;
+            animation: cyber-eye-regard 2s infinite ease-in-out; /* Yeux qui regardent ! */
         }
         
-        /* Pinky (Rose) - Lueur douce */
-        .pinky { 
-            background-color: #ffb8ff; 
-            box-shadow: 0 0 15px #ffb8ff, 0 0 5px #ffb8ff inset; 
-        }
-        
-        /* Inky (Bleu) - Lueur cyan froide */
-        .inky { 
-            background-color: #00ffff; 
-            box-shadow: 0 0 15px #00ffff, 0 0 5px #00ffff inset; 
-        }
-        
-        /* Clyde (Orange) - Lueur chaude */
-        .clyde { 
-            background-color: #ffb851; 
-            box-shadow: 0 0 15px #ffb851, 0 0 5px #ffb851 inset; 
+        /* La bouche numérique Cyber (en noir) */
+        .ghost-mouth {
+            position: absolute;
+            bottom: 3px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 8px;
+            height: 3px;
+            background-color: #000;
+            border-radius: 2px;
         }
 
-        /* Effet de lueur quand ils bougent */
-        .ghost.moving {
-            animation: pulse-glow 0.3s infinite alternate;
+        /* Animation : Les yeux Cyber regardent à gauche, puis à droite ! */
+        @keyframes cyber-eye-regard {
+            0% { transform: translate(0px, 0px); }
+            15% { transform: translate(-3px, 0px); } /* Gauche */
+            30% { transform: translate(0px, 0px); } /* Centre */
+            45% { transform: translate(3px, 0px); } /* Droite */
+            60% { transform: translate(0px, 0px); } /* Centre */
         }
         
-        @keyframes pulse-glow {
-            from { box-shadow: 0 0 10px; }
-            to { box-shadow: 0 0 20px; }
-        }
-        
+        /* Les Cyber-Couleurs avec leur visage */
+        .blinky { background-color: #ff0000; box-shadow: 0 0 15px #ff0000, 0 0 5px #ff0000 inset; }
+        .pinky { background-color: #ffb8ff; box-shadow: 0 0 15px #ffb8ff, 0 0 5px #ffb8ff inset; }
+        .inky { background-color: #00ffff; box-shadow: 0 0 15px #00ffff, 0 0 5px #00ffff inset; }
+        .clyde { background-color: #ffb851; box-shadow: 0 0 15px #ffb851, 0 0 5px #ffb851 inset; }
+
         .score-text { 
             font-size: 40px; 
             margin-bottom: 20px; 
@@ -146,6 +152,7 @@
     </div>
 
     <script>
+        // Le JavaScript reste inchangé, j'ai juste mis à jour la fonction createGhostBoard
         const grid = document.querySelector('.grid');
         const scoreDisplay = document.getElementById('score');
         const startButton = document.getElementById('start-button');
@@ -232,8 +239,8 @@
             const ghosts = [
                 new Ghost('blinky', 125, 300),
                 new Ghost('pinky', 127, 350),
-                new Ghost('inky', 171, 380), // J'ai ajouté Inky (bleu)
-                new Ghost('clyde', 173, 400) // Et Clyde (orange)
+                new Ghost('inky', 171, 380),
+                new Ghost('clyde', 173, 400)
             ];
 
             ghosts.forEach(ghost => {
@@ -247,9 +254,19 @@
 
                 ghost.timerId = setInterval(() => {
                     if(!squares[ghost.currentIndex + direction].classList.contains('wall')) {
-                        squares[ghost.currentIndex].classList.remove('ghost', ghost.className, 'moving');
+                        // Enlever les classes, y compris cyber-face
+                        squares[ghost.currentIndex].classList.remove('ghost', ghost.className);
+                        const mouthToRemove = squares[ghost.currentIndex].querySelector('.ghost-mouth');
+                        if (mouthToRemove) mouthToRemove.remove();
+                        
                         ghost.currentIndex += direction;
-                        squares[ghost.currentIndex].classList.add('ghost', ghost.className, 'moving');
+                        
+                        // Remettre les classes et le visage
+                        squares[ghost.currentIndex].classList.add('ghost', ghost.className);
+                        const mouth = document.createElement('div');
+                        mouth.classList.add('ghost-mouth');
+                        squares[ghost.currentIndex].appendChild(mouth);
+                        
                     } else {
                         direction = directions[Math.floor(Math.random() * directions.length)];
                     }
