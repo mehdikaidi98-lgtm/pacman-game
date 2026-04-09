@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>Mehdi Pacman - Relax Edition</title>
+    <title>Mehdi Pacman - Cyber Style</title>
     <style>
         body {
             background-color: #000;
@@ -17,7 +17,6 @@
             overflow: hidden;
         }
 
-        /* --- Page de Garde --- */
         #start-screen {
             display: flex;
             flex-direction: column;
@@ -47,7 +46,6 @@
 
         #start-button:hover { transform: scale(1.1); background-color: #fff; }
 
-        /* --- Interface du Jeu --- */
         #game-container { display: none; flex-direction: column; align-items: center; }
         
         .grid {
@@ -56,21 +54,18 @@
             width: 460px;
             height: 340px;
             border: 6px solid #2222ff;
-            box-shadow: 0 0 25px #2222ff;
+            box-shadow: 0 0 25px #2222ff, 0 0 10px #2222ff inset;
             background-color: #000;
         }
 
         .grid div { width: 20px; height: 20px; box-sizing: border-box; }
-        .wall { background-color: #1919a6; border: 1px solid #0000ff; }
-        
-        /* Petites pièces */
+        .wall { background-color: #0a0a5e; border: 1px solid #1a1aff; border-radius: 4px; }
         .dot { 
             background-color: #ffb8ae; 
             border: 8px solid #000; 
             border-radius: 50%; 
         }
 
-        /* LA GRANDE PIÈCE (Super Pastille) */
         .big-dot {
             background-color: #ff00ff;
             border: 4px solid #000;
@@ -87,10 +82,48 @@
             box-shadow: 0 0 15px #ffff00; 
         }
         
-        /* Les Fantômes */
-        .ghost { border-radius: 10px 10px 0 0; }
-        .blinky { background-color: #ff0000; box-shadow: 0 0 10px #ff0000; }
-        .pinky { background-color: #ffb8ff; box-shadow: 0 0 10px #ffb8ff; }
+        /* --- STYLE CYBER-NÉON DES MÉCHANTS (Les Fantômes) --- */
+        .ghost { 
+            border-radius: 10px 10px 0 0; 
+            /* Forme moderne et lisse comme ton image */
+            transform: scale(0.95); 
+            transition: all 0.2s;
+            opacity: 0.9; /* Légère transparence hologramme */
+        }
+        
+        /* Blinky (Rouge) - Lueur d'alerte */
+        .blinky { 
+            background-color: #ff0000; 
+            box-shadow: 0 0 15px #ff0000, 0 0 5px #ff0000 inset; 
+        }
+        
+        /* Pinky (Rose) - Lueur douce */
+        .pinky { 
+            background-color: #ffb8ff; 
+            box-shadow: 0 0 15px #ffb8ff, 0 0 5px #ffb8ff inset; 
+        }
+        
+        /* Inky (Bleu) - Lueur cyan froide */
+        .inky { 
+            background-color: #00ffff; 
+            box-shadow: 0 0 15px #00ffff, 0 0 5px #00ffff inset; 
+        }
+        
+        /* Clyde (Orange) - Lueur chaude */
+        .clyde { 
+            background-color: #ffb851; 
+            box-shadow: 0 0 15px #ffb851, 0 0 5px #ffb851 inset; 
+        }
+
+        /* Effet de lueur quand ils bougent */
+        .ghost.moving {
+            animation: pulse-glow 0.3s infinite alternate;
+        }
+        
+        @keyframes pulse-glow {
+            from { box-shadow: 0 0 10px; }
+            to { box-shadow: 0 0 20px; }
+        }
         
         .score-text { 
             font-size: 40px; 
@@ -101,10 +134,6 @@
     </style>
 </head>
 <body>
-
-    <audio id="relax-music" loop>
-        <source src="https://www.chosic.com/wp-content/uploads/2021/07/Rainy-Day-Piano-Chill.mp3" type="audio/mpeg">
-    </audio>
 
     <div id="start-screen">
         <h1>MEHDI PACMAN</h1>
@@ -122,7 +151,6 @@
         const startButton = document.getElementById('start-button');
         const startScreen = document.getElementById('start-screen');
         const gameContainer = document.getElementById('game-container');
-        const music = document.getElementById('relax-music');
         const width = 23; 
         let score = 0;
 
@@ -160,7 +188,6 @@
         startButton.addEventListener('click', () => {
             startScreen.style.display = 'none';
             gameContainer.style.display = 'flex';
-            music.play(); // Lance la musique relaxante
             createBoard();
             startGame();
         });
@@ -176,14 +203,12 @@
                 if(e.key === 'ArrowUp' && pacmanIndex - width >= 0 && !squares[pacmanIndex-width].classList.contains('wall')) pacmanIndex -=width;
                 if(e.key === 'ArrowDown' && pacmanIndex + width < layout.length && !squares[pacmanIndex+width].classList.contains('wall')) pacmanIndex +=width;
                 
-                // Manger les petites pièces
                 if(squares[pacmanIndex].classList.contains('dot')) {
                     score++;
                     scoreDisplay.innerHTML = score;
                     squares[pacmanIndex].classList.remove('dot');
                 }
                 
-                // MANGER LA GRANDE PIÈCE (+50 points)
                 if(squares[pacmanIndex].classList.contains('big-dot')) {
                     score += 50;
                     scoreDisplay.innerHTML = score;
@@ -206,7 +231,9 @@
 
             const ghosts = [
                 new Ghost('blinky', 125, 300),
-                new Ghost('pinky', 127, 350)
+                new Ghost('pinky', 127, 350),
+                new Ghost('inky', 171, 380), // J'ai ajouté Inky (bleu)
+                new Ghost('clyde', 173, 400) // Et Clyde (orange)
             ];
 
             ghosts.forEach(ghost => {
@@ -220,16 +247,15 @@
 
                 ghost.timerId = setInterval(() => {
                     if(!squares[ghost.currentIndex + direction].classList.contains('wall')) {
-                        squares[ghost.currentIndex].classList.remove('ghost', ghost.className);
+                        squares[ghost.currentIndex].classList.remove('ghost', ghost.className, 'moving');
                         ghost.currentIndex += direction;
-                        squares[ghost.currentIndex].classList.add('ghost', ghost.className);
+                        squares[ghost.currentIndex].classList.add('ghost', ghost.className, 'moving');
                     } else {
                         direction = directions[Math.floor(Math.random() * directions.length)];
                     }
 
                     if (squares[ghost.currentIndex].classList.contains('pac-man')) {
                         clearInterval(ghost.timerId);
-                        music.pause();
                         alert("GAME OVER - MEHDI PACMAN");
                         location.reload();
                     }
