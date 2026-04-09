@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>Mehdi Pacman - 5 Traqueurs Intelligents</title>
+    <title>Mehdi Pacman - La Meute du Milieu</title>
     <style>
         body {
             background-color: #000;
@@ -17,65 +17,69 @@
             overflow: hidden;
         }
 
-        #start-screen {
+        /* --- ÉCRANS --- */
+        #start-screen, #game-over-screen {
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: space-around;
-            height: 60%;
+            justify-content: center;
+            position: absolute;
+            z-index: 10;
+            background: rgba(0,0,0,0.9);
+            width: 100%;
+            height: 100%;
         }
 
-        #start-screen h1 {
-            font-size: 70px;
-            color: #ffff00;
-            text-shadow: 0 0 20px #ffff00, 0 0 40px #0000ff;
-        }
+        #game-over-screen { display: none; color: #ff0000; }
 
-        #start-button {
-            padding: 25px 60px;
-            font-size: 35px;
+        h1 { font-size: 70px; text-shadow: 0 0 20px currentColor; margin-bottom: 50px; }
+        .yellow { color: #ffff00; }
+
+        .btn {
+            padding: 20px 50px;
+            font-size: 30px;
             background-color: #ffff00;
             color: #000;
             border: none;
             border-radius: 50px;
             cursor: pointer;
             font-weight: bold;
-            box-shadow: 0 0 30px #ffff00;
+            box-shadow: 0 0 20px #ffff00;
             transition: 0.3s;
         }
+        .btn:hover { transform: scale(1.1); }
 
-        #start-button:hover { transform: scale(1.1); }
-
+        /* --- JEU --- */
         #game-container { display: none; flex-direction: column; align-items: center; }
         
         .grid {
             display: flex;
             flex-wrap: wrap;
-            width: 621px; /* Grande pièce */
+            width: 621px; 
             height: 405px;
             border: 8px solid #2222ff;
             box-shadow: 0 0 30px #2222ff;
-            background-color: #000;
         }
 
-        .grid div { width: 27px; height: 27px; box-sizing: border-box; position: relative; }
-        .wall { background-color: #0a0a5e; border: 2px solid #1a1aff; border-radius: 4px; }
+        .grid div { width: 27px; height: 27px; position: relative; }
+        .wall { background-color: #0a0a5e; border: 2px solid #1a1aff; box-sizing: border-box; }
         .dot { background-color: #ffb8ae; border: 11px solid #000; border-radius: 50%; }
         
-        .pac-man { background-color: #ffff00; border-radius: 50%; box-shadow: 0 0 15px #ffff00; }
+        /* La Chambre du milieu */
+        .ghost-house { background-color: #222; border: 1px dashed #555; }
+
+        .pac-man { background-color: #ffff00; border-radius: 50%; box-shadow: 0 0 15px #ffff00; z-index: 5; }
         
-        /* Fantômes Cyber avec visages */
-        .ghost { border-radius: 12px 12px 0 0; opacity: 0.95; display: flex; justify-content: space-around; padding-top: 5px; }
+        .ghost { border-radius: 12px 12px 0 0; display: flex; justify-content: space-around; padding-top: 5px; z-index: 4; }
         .ghost::before, .ghost::after { content: ''; width: 6px; height: 6px; background-color: #000; border-radius: 50%; }
         
-        /* Les 5 Couleurs */
         .blinky { background-color: #ff0000; box-shadow: 0 0 15px #ff0000; }
         .pinky { background-color: #ffb8ff; box-shadow: 0 0 15px #ffb8ff; }
         .inky { background-color: #00ffff; box-shadow: 0 0 15px #00ffff; }
         .clyde { background-color: #ffb851; box-shadow: 0 0 15px #ffb851; }
-        .ghost5 { background-color: #00ff00; box-shadow: 0 0 15px #00ff00; } /* Nouveau vert */
+        .ghost5 { background-color: #00ff00; box-shadow: 0 0 15px #00ff00; }
 
-        .score-text { font-size: 45px; margin-bottom: 20px; color: #ffff00; text-shadow: 0 0 15px #ffff00; }
+        .score-text { font-size: 40px; margin-bottom: 10px; color: #ffff00; }
     </style>
 </head>
 <body>
@@ -85,7 +89,13 @@
     </audio>
 
     <div id="start-screen">
-        <h1>MEHDI PIANO</h1> <button id="start-button">START GAME</button>
+        <h1 class="yellow">MEHDI PACMAN</h1>
+        <button class="btn" onclick="initGame()">START GAME</button>
+    </div>
+
+    <div id="game-over-screen">
+        <h1>GAME OVER</h1>
+        <button class="btn" onclick="location.reload()">REESSAYER</button>
     </div>
 
     <div id="game-container">
@@ -96,22 +106,24 @@
     <script>
         const grid = document.querySelector('.grid');
         const scoreDisplay = document.getElementById('score');
-        const startButton = document.getElementById('start-button');
         const music = document.getElementById('relax-music');
         const width = 23; 
         let score = 0;
         let pacmanIndex = 241;
+        let squares = [];
+        let ghostIntervals = [];
 
+        // 1 = Mur, 0 = Point, 2 = Chambre des fantômes
         const layout = [
             1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
             1,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,1,
             1,0,1,1,1,0,1,1,1,1,0,1,0,1,1,1,1,0,1,1,1,0,1,
             1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,
-            1,0,1,1,1,0,1,0,1,1,1,1,1,1,1,0,1,0,1,1,1,0,1,
+            1,0,1,1,1,0,1,1,1,1,1,1,1,1,1,1,1,0,1,1,1,0,1,
             1,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,1,
-            1,1,1,1,1,0,1,1,1,1,0,0,0,1,1,1,1,0,1,1,1,1,1,
-            1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,
-            1,0,1,1,1,0,1,1,1,1,1,1,1,1,1,0,1,0,1,1,1,0,1,
+            1,1,1,1,1,0,1,0,1,2,2,2,2,2,1,0,1,0,1,1,1,1,1,
+            1,0,0,0,0,0,0,0,1,2,2,2,2,2,1,0,0,0,0,0,0,0,1,
+            1,0,1,1,1,0,1,0,1,1,1,1,1,1,1,0,1,0,1,1,1,0,1,
             1,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,1,
             1,0,1,1,1,0,1,1,1,1,0,1,0,1,1,1,1,0,1,1,1,0,1,
             1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,
@@ -119,26 +131,20 @@
             1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1
         ];
 
-        const squares = [];
-        function createBoard() {
+        function initGame() {
+            document.getElementById('start-screen').style.display = 'none';
+            document.getElementById('game-container').style.display = 'flex';
+            music.play();
+            
             layout.forEach(val => {
                 const square = document.createElement('div');
                 grid.appendChild(square);
                 squares.push(square);
                 if(val === 1) square.classList.add('wall');
                 if(val === 0) square.classList.add('dot');
+                if(val === 2) square.classList.add('ghost-house');
             });
-        }
 
-        startButton.addEventListener('click', () => {
-            document.getElementById('start-screen').style.display = 'none';
-            document.getElementById('game-container').style.display = 'flex';
-            music.play();
-            createBoard();
-            startGame();
-        });
-
-        function startGame() {
             squares[pacmanIndex].classList.add('pac-man');
             document.addEventListener('keydown', movePacman);
 
@@ -151,13 +157,13 @@
                 }
             }
 
-            // J'ai ajouté les 5 fantômes avec une vitesse augmentée
+            // Tous les fantômes commencent dans la chambre (index 149-151-172 etc)
             const ghosts = [
-                new Ghost('blinky', 116, 400),
-                new Ghost('pinky', 136, 420),
-                new Ghost('inky', 23, 440),
-                new Ghost('clyde', 45, 460),
-                new Ghost('ghost5', 300, 480)
+                new Ghost('blinqui', 150, 380),
+                new Ghost('pinky', 150, 390),
+                new Ghost('inky', 151, 400),
+                new Ghost('clyde', 172, 410),
+                new Ghost('ghost5', 173, 420)
             ];
 
             ghosts.forEach(ghost => {
@@ -166,23 +172,22 @@
             });
 
             function moveGhost(ghost) {
-                setInterval(() => {
+                const interval = setInterval(() => {
                     const px = pacmanIndex % width;
                     const py = Math.floor(pacmanIndex / width);
                     const gx = ghost.currentIndex % width;
                     const gy = Math.floor(ghost.currentIndex / width);
 
                     let possibilities = [];
-                    // Vérifier les directions possibles pour se rapprocher de toi
+                    // Logique de traque intelligente
                     if (gx < px && !squares[ghost.currentIndex + 1].classList.contains('wall')) possibilities.push(ghost.currentIndex + 1);
                     if (gx > px && !squares[ghost.currentIndex - 1].classList.contains('wall')) possibilities.push(ghost.currentIndex - 1);
                     if (gy < py && !squares[ghost.currentIndex + width].classList.contains('wall')) possibilities.push(ghost.currentIndex + width);
                     if (gy > py && !squares[ghost.currentIndex - width].classList.contains('wall')) possibilities.push(ghost.currentIndex - width);
 
-                    // Si le chemin direct est bloqué, il prend une direction au hasard parmi les libres
                     if (possibilities.length === 0) {
-                        const allDirections = [1, -1, width, -width];
-                        possibilities = allDirections.map(d => ghost.currentIndex + d).filter(idx => !squares[idx].classList.contains('wall'));
+                        const directions = [1, -1, width, -width];
+                        possibilities = directions.map(d => ghost.currentIndex + d).filter(idx => !squares[idx].classList.contains('wall'));
                     }
 
                     const nextIndex = possibilities[Math.floor(Math.random() * possibilities.length)];
@@ -194,10 +199,18 @@
                     }
 
                     if (squares[ghost.currentIndex].classList.contains('pac-man')) {
-                        location.reload();
+                        gameOver();
                     }
                 }, ghost.speed);
+                ghostIntervals.push(interval);
             }
+        }
+
+        function gameOver() {
+            ghostIntervals.forEach(clearInterval);
+            document.removeEventListener('keydown', movePacman);
+            document.getElementById('game-over-screen').style.display = 'flex';
+            music.pause();
         }
 
         function movePacman(e) {
