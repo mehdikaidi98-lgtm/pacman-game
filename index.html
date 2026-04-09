@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>Mehdi Pacman - Grande Pièce Relax</title>
+    <title>Mehdi Pacman - 5 Traqueurs Intelligents</title>
     <style>
         body {
             background-color: #000;
@@ -48,11 +48,10 @@
 
         #game-container { display: none; flex-direction: column; align-items: center; }
         
-        /* --- LA GRANDE PIÈCE DE JEU --- */
         .grid {
             display: flex;
             flex-wrap: wrap;
-            width: 621px; /* Plus large pour plus d'espace */
+            width: 621px; /* Grande pièce */
             height: 405px;
             border: 8px solid #2222ff;
             box-shadow: 0 0 30px #2222ff;
@@ -65,13 +64,16 @@
         
         .pac-man { background-color: #ffff00; border-radius: 50%; box-shadow: 0 0 15px #ffff00; }
         
-        /* Fantômes avec visages */
+        /* Fantômes Cyber avec visages */
         .ghost { border-radius: 12px 12px 0 0; opacity: 0.95; display: flex; justify-content: space-around; padding-top: 5px; }
         .ghost::before, .ghost::after { content: ''; width: 6px; height: 6px; background-color: #000; border-radius: 50%; }
         
+        /* Les 5 Couleurs */
         .blinky { background-color: #ff0000; box-shadow: 0 0 15px #ff0000; }
         .pinky { background-color: #ffb8ff; box-shadow: 0 0 15px #ffb8ff; }
         .inky { background-color: #00ffff; box-shadow: 0 0 15px #00ffff; }
+        .clyde { background-color: #ffb851; box-shadow: 0 0 15px #ffb851; }
+        .ghost5 { background-color: #00ff00; box-shadow: 0 0 15px #00ff00; } /* Nouveau vert */
 
         .score-text { font-size: 45px; margin-bottom: 20px; color: #ffff00; text-shadow: 0 0 15px #ffff00; }
     </style>
@@ -83,8 +85,7 @@
     </audio>
 
     <div id="start-screen">
-        <h1>MEHDI PACMAN</h1>
-        <button id="start-button">START GAME</button>
+        <h1>MEHDI PIANO</h1> <button id="start-button">START GAME</button>
     </div>
 
     <div id="game-container">
@@ -150,9 +151,13 @@
                 }
             }
 
+            // J'ai ajouté les 5 fantômes avec une vitesse augmentée
             const ghosts = [
-                new Ghost('blinky', 116, 500), // Vitesse lente pour relaxation
-                new Ghost('pinky', 136, 550)
+                new Ghost('blinky', 116, 400),
+                new Ghost('pinky', 136, 420),
+                new Ghost('inky', 23, 440),
+                new Ghost('clyde', 45, 460),
+                new Ghost('ghost5', 300, 480)
             ];
 
             ghosts.forEach(ghost => {
@@ -167,17 +172,26 @@
                     const gx = ghost.currentIndex % width;
                     const gy = Math.floor(ghost.currentIndex / width);
 
-                    let nextIndex = ghost.currentIndex;
+                    let possibilities = [];
+                    // Vérifier les directions possibles pour se rapprocher de toi
+                    if (gx < px && !squares[ghost.currentIndex + 1].classList.contains('wall')) possibilities.push(ghost.currentIndex + 1);
+                    if (gx > px && !squares[ghost.currentIndex - 1].classList.contains('wall')) possibilities.push(ghost.currentIndex - 1);
+                    if (gy < py && !squares[ghost.currentIndex + width].classList.contains('wall')) possibilities.push(ghost.currentIndex + width);
+                    if (gy > py && !squares[ghost.currentIndex - width].classList.contains('wall')) possibilities.push(ghost.currentIndex - width);
 
-                    // Intelligence : Le fantôme réduit la distance avec Pacman
-                    if (gx < px && !squares[ghost.currentIndex + 1].classList.contains('wall')) nextIndex++;
-                    else if (gx > px && !squares[ghost.currentIndex - 1].classList.contains('wall')) nextIndex--;
-                    else if (gy < py && !squares[ghost.currentIndex + width].classList.contains('wall')) nextIndex += width;
-                    else if (gy > py && !squares[ghost.currentIndex - width].classList.contains('wall')) nextIndex -= width;
+                    // Si le chemin direct est bloqué, il prend une direction au hasard parmi les libres
+                    if (possibilities.length === 0) {
+                        const allDirections = [1, -1, width, -width];
+                        possibilities = allDirections.map(d => ghost.currentIndex + d).filter(idx => !squares[idx].classList.contains('wall'));
+                    }
 
-                    squares[ghost.currentIndex].classList.remove('ghost', ghost.className);
-                    ghost.currentIndex = nextIndex;
-                    squares[ghost.currentIndex].classList.add('ghost', ghost.className);
+                    const nextIndex = possibilities[Math.floor(Math.random() * possibilities.length)];
+
+                    if (nextIndex) {
+                        squares[ghost.currentIndex].classList.remove('ghost', ghost.className);
+                        ghost.currentIndex = nextIndex;
+                        squares[ghost.currentIndex].classList.add('ghost', ghost.className);
+                    }
 
                     if (squares[ghost.currentIndex].classList.contains('pac-man')) {
                         location.reload();
