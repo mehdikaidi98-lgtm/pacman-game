@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>Mehdi Pacman - La Meute du Milieu</title>
+    <title>Mehdi Pacman - Cyber Meute</title>
     <style>
         body {
             background-color: #000;
@@ -25,31 +25,32 @@
             justify-content: center;
             position: absolute;
             z-index: 10;
-            background: rgba(0,0,0,0.9);
+            background: rgba(0,0,0,0.95);
             width: 100%;
             height: 100%;
         }
 
-        #game-over-screen { display: none; color: #ff0000; }
+        #game-over-screen { display: none; text-align: center; }
 
-        h1 { font-size: 70px; text-shadow: 0 0 20px currentColor; margin-bottom: 50px; }
+        h1 { font-size: 60px; text-shadow: 0 0 20px currentColor; margin-bottom: 30px; }
         .yellow { color: #ffff00; }
+        .red { color: #ff0000; text-shadow: 0 0 20px #ff0000; }
 
         .btn {
             padding: 20px 50px;
             font-size: 30px;
-            background-color: #ffff00;
-            color: #000;
-            border: none;
+            background: transparent;
+            color: currentColor;
+            border: 5px solid currentColor;
             border-radius: 50px;
             cursor: pointer;
             font-weight: bold;
-            box-shadow: 0 0 20px #ffff00;
+            box-shadow: 0 0 15px currentColor;
             transition: 0.3s;
         }
-        .btn:hover { transform: scale(1.1); }
+        .btn:hover { transform: scale(1.1); background: rgba(255,255,255,0.1); }
 
-        /* --- JEU --- */
+        /* --- PLATEAU DE JEU (La grande pièce) --- */
         #game-container { display: none; flex-direction: column; align-items: center; }
         
         .grid {
@@ -65,11 +66,10 @@
         .wall { background-color: #0a0a5e; border: 2px solid #1a1aff; box-sizing: border-box; }
         .dot { background-color: #ffb8ae; border: 11px solid #000; border-radius: 50%; }
         
-        /* La Chambre du milieu */
-        .ghost-house { background-color: #222; border: 1px dashed #555; }
-
+        /* Pacman */
         .pac-man { background-color: #ffff00; border-radius: 50%; box-shadow: 0 0 15px #ffff00; z-index: 5; }
         
+        /* Les Tueurs avec visages */
         .ghost { border-radius: 12px 12px 0 0; display: flex; justify-content: space-around; padding-top: 5px; z-index: 4; }
         .ghost::before, .ghost::after { content: ''; width: 6px; height: 6px; background-color: #000; border-radius: 50%; }
         
@@ -90,12 +90,12 @@
 
     <div id="start-screen">
         <h1 class="yellow">MEHDI PACMAN</h1>
-        <button class="btn" onclick="initGame()">START GAME</button>
+        <button class="btn yellow" onclick="initGame()">START GAME</button>
     </div>
 
     <div id="game-over-screen">
-        <h1>GAME OVER</h1>
-        <button class="btn" onclick="location.reload()">REESSAYER</button>
+        <h1 class="red">GAME OVER<br>JE T AIMME PASSSSSSSS</h1>
+        <button class="btn red" onclick="location.reload()">REESSAYER</button>
     </div>
 
     <div id="game-container">
@@ -113,17 +113,16 @@
         let squares = [];
         let ghostIntervals = [];
 
-        // 1 = Mur, 0 = Point, 2 = Chambre des fantômes
         const layout = [
             1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
             1,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,1,
             1,0,1,1,1,0,1,1,1,1,0,1,0,1,1,1,1,0,1,1,1,0,1,
             1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,
-            1,0,1,1,1,0,1,1,1,1,1,1,1,1,1,1,1,0,1,1,1,0,1,
-            1,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,1,
-            1,1,1,1,1,0,1,0,1,2,2,2,2,2,1,0,1,0,1,1,1,1,1,
-            1,0,0,0,0,0,0,0,1,2,2,2,2,2,1,0,0,0,0,0,0,0,1,
             1,0,1,1,1,0,1,0,1,1,1,1,1,1,1,0,1,0,1,1,1,0,1,
+            1,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,1,
+            1,1,1,1,1,0,1,1,1,1,0,0,0,1,1,1,1,0,1,1,1,1,1,
+            1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,
+            1,0,1,1,1,0,1,1,1,1,1,1,1,1,1,0,1,0,1,1,1,0,1,
             1,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,1,
             1,0,1,1,1,0,1,1,1,1,0,1,0,1,1,1,1,0,1,1,1,0,1,
             1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,
@@ -142,7 +141,6 @@
                 squares.push(square);
                 if(val === 1) square.classList.add('wall');
                 if(val === 0) square.classList.add('dot');
-                if(val === 2) square.classList.add('ghost-house');
             });
 
             squares[pacmanIndex].classList.add('pac-man');
@@ -157,13 +155,12 @@
                 }
             }
 
-            // Tous les fantômes commencent dans la chambre (index 149-151-172 etc)
             const ghosts = [
-                new Ghost('blinqui', 150, 380),
-                new Ghost('pinky', 150, 390),
-                new Ghost('inky', 151, 400),
-                new Ghost('clyde', 172, 410),
-                new Ghost('ghost5', 173, 420)
+                new Ghost('blinky', 116, 320),
+                new Ghost('pinky', 136, 340),
+                new Ghost('inky', 23, 360),
+                new Ghost('clyde', 45, 380),
+                new Ghost('ghost5', 300, 400)
             ];
 
             ghosts.forEach(ghost => {
@@ -178,25 +175,15 @@
                     const gx = ghost.currentIndex % width;
                     const gy = Math.floor(ghost.currentIndex / width);
 
-                    let possibilities = [];
-                    // Logique de traque intelligente
-                    if (gx < px && !squares[ghost.currentIndex + 1].classList.contains('wall')) possibilities.push(ghost.currentIndex + 1);
-                    if (gx > px && !squares[ghost.currentIndex - 1].classList.contains('wall')) possibilities.push(ghost.currentIndex - 1);
-                    if (gy < py && !squares[ghost.currentIndex + width].classList.contains('wall')) possibilities.push(ghost.currentIndex + width);
-                    if (gy > py && !squares[ghost.currentIndex - width].classList.contains('wall')) possibilities.push(ghost.currentIndex - width);
+                    let nextIndex = ghost.currentIndex;
+                    if (gx < px && !squares[ghost.currentIndex + 1].classList.contains('wall')) nextIndex++;
+                    else if (gx > px && !squares[ghost.currentIndex - 1].classList.contains('wall')) nextIndex--;
+                    else if (gy < py && !squares[ghost.currentIndex + width].classList.contains('wall')) nextIndex += width;
+                    else if (gy > py && !squares[ghost.currentIndex - width].classList.contains('wall')) nextIndex -= width;
 
-                    if (possibilities.length === 0) {
-                        const directions = [1, -1, width, -width];
-                        possibilities = directions.map(d => ghost.currentIndex + d).filter(idx => !squares[idx].classList.contains('wall'));
-                    }
-
-                    const nextIndex = possibilities[Math.floor(Math.random() * possibilities.length)];
-
-                    if (nextIndex) {
-                        squares[ghost.currentIndex].classList.remove('ghost', ghost.className);
-                        ghost.currentIndex = nextIndex;
-                        squares[ghost.currentIndex].classList.add('ghost', ghost.className);
-                    }
+                    squares[ghost.currentIndex].classList.remove('ghost', ghost.className);
+                    ghost.currentIndex = nextIndex;
+                    squares[ghost.currentIndex].classList.add('ghost', ghost.className);
 
                     if (squares[ghost.currentIndex].classList.contains('pac-man')) {
                         gameOver();
