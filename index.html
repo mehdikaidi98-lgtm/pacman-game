@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>Mehdi Pacman - Cyber Meute</title>
+    <title>Mehdi Pacman - Version Ghost Fix</title>
     <style>
         body {
             background-color: #000;
@@ -17,80 +17,83 @@
             overflow: hidden;
         }
 
-        /* --- ÉCRANS --- */
         #start-screen, #game-over-screen {
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
             position: absolute;
-            z-index: 20;
-            background: rgba(0,0,0,0.95);
+            z-index: 100;
+            background: rgba(0,0,0,0.9);
             width: 100%;
             height: 100%;
         }
 
         #game-over-screen { display: none; text-align: center; }
-        h1 { font-size: 60px; text-shadow: 0 0 20px currentColor; margin-bottom: 20px; }
+        h1 { font-size: 50px; margin-bottom: 20px; }
         .yellow { color: #ffff00; }
         .red { color: #ff0000; }
 
         .btn {
-            padding: 20px 50px;
-            font-size: 30px;
+            padding: 15px 40px;
+            font-size: 25px;
             background: transparent;
-            color: currentColor;
-            border: 5px solid currentColor;
-            border-radius: 50px;
+            color: inherit;
+            border: 4px solid currentColor;
             cursor: pointer;
-            font-weight: bold;
-            box-shadow: 0 0 15px currentColor;
-            transition: 0.3s;
+            border-radius: 30px;
         }
-        .btn:hover { transform: scale(1.1); }
 
-        /* --- PLATEAU --- */
         #game-container { display: none; flex-direction: column; align-items: center; }
         .grid {
             display: flex;
             flex-wrap: wrap;
             width: 621px; 
             height: 378px;
-            border: 8px solid #2222ff;
-            background-color: #000;
+            border: 5px solid #2222ff;
         }
 
-        .grid div { width: 27px; height: 27px; box-sizing: border-box; }
-        .wall { background-color: #0a0a5e; border: 2px solid #1a1aff; }
+        .grid div { width: 27px; height: 27px; position: relative; }
+        .wall { background-color: #0a0a5e; border: 1px solid #1a1aff; }
         .dot { background-color: #ffb8ae; border: 11px solid #000; border-radius: 50%; }
 
-        /* PERSONNAGES */
-        .pac-man { 
-            background-color: #ffff00; 
-            border-radius: 50%; 
-            box-shadow: 0 0 10px #ffff00; 
-            z-index: 10; 
+        /* PACMAN */
+        .pac-man { background-color: #ffff00; border-radius: 50%; z-index: 10; }
+
+        /* DESIGN DES FANTÔMES SANS IMAGE (POUR ÊTRE SÛR QUE ÇA MARCHE) */
+        .ghost {
+            z-index: 20;
+            background-color: #ff0000; /* Rouge classique */
+            border-radius: 13px 13px 0 0;
+            position: relative;
+        }
+        /* Les yeux des fantômes */
+        .ghost::before {
+            content: '● ●';
+            color: white;
+            font-size: 10px;
+            position: absolute;
+            top: 5px;
+            left: 3px;
+            letter-spacing: 2px;
+        }
+        /* Le bas dentelé du fantôme */
+        .ghost::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            width: 100%;
+            height: 5px;
+            background-image: linear-gradient(135deg, transparent 25%, #ff0000 25%), 
+                              linear-gradient(225deg, transparent 25%, #ff0000 25%);
+            background-size: 9px 10px;
         }
 
-        /* --- NOUVEAU STYLE GHOST CLASSIQUE (Translucide) --- */
-        .ghost { 
-            /* J'ai utilisé une banque d'images pour trouver ce fantôme classique */
-            background-image: url('https://upload.wikimedia.org/wikipedia/commons/2/23/Pac_man_ghosts.png');
-            background-size: contain;
-            background-repeat: no-repeat;
-            background-position: center;
-            background-color: transparent !important;
-            z-index: 5;
-        }
-
-        .score-text { font-size: 40px; margin-bottom: 10px; color: #ffff00; }
+        .score-text { font-size: 30px; color: #ffff00; }
     </style>
 </head>
 <body>
-
-    <audio id="relax-music" loop>
-        <source src="https://www.chosic.com/wp-content/uploads/2021/07/Rainy-Day-Piano-Chill.mp3" type="audio/mpeg">
-    </audio>
 
     <div id="start-screen">
         <h1 class="yellow">MEHDI PACMAN</h1>
@@ -110,7 +113,6 @@
     <script>
         const grid = document.querySelector('.grid');
         const scoreDisplay = document.getElementById('score');
-        const music = document.getElementById('relax-music');
         const width = 23; 
         let score = 0;
         let pacmanIndex = 241;
@@ -136,7 +138,6 @@
         function initGame() {
             document.getElementById('start-screen').style.display = 'none';
             document.getElementById('game-container').style.display = 'flex';
-            music.play();
             
             layout.forEach(val => {
                 const square = document.createElement('div');
@@ -149,56 +150,41 @@
             squares[pacmanIndex].classList.add('pac-man');
             document.addEventListener('keydown', movePacman);
 
-            class Ghost {
-                constructor(startIndex, speed) {
-                    this.currentIndex = startIndex;
-                    this.speed = speed;
-                }
-            }
-
-            // Placement des fantômes classiques
             const ghosts = [
-                new Ghost(30, 400),
-                new Ghost(40, 450),
-                new Ghost(150, 500)
+                { index: 30, speed: 400 },
+                { index: 40, speed: 450 },
+                { index: 150, speed: 500 }
             ];
 
             ghosts.forEach(ghost => {
-                squares[ghost.currentIndex].classList.add('ghost');
+                squares[ghost.index].classList.add('ghost');
                 moveGhost(ghost);
             });
-
-            function moveGhost(ghost) {
-                const interval = setInterval(() => {
-                    const px = pacmanIndex % width;
-                    const py = Math.floor(pacmanIndex / width);
-                    const gx = ghost.currentIndex % width;
-                    const gy = Math.floor(ghost.currentIndex / width);
-
-                    let nextIndex = ghost.currentIndex;
-                    if (gx < px && !squares[ghost.currentIndex + 1].classList.contains('wall')) nextIndex++;
-                    else if (gx > px && !squares[ghost.currentIndex - 1].classList.contains('wall')) nextIndex--;
-                    else if (gy < py && !squares[ghost.currentIndex + width].classList.contains('wall')) nextIndex += width;
-                    else if (gy > py && !squares[ghost.currentIndex - width].classList.contains('wall')) nextIndex -= width;
-
-                    squares[ghost.currentIndex].classList.remove('ghost');
-                    ghost.currentIndex = nextIndex;
-                    squares[ghost.currentIndex].classList.add('ghost');
-
-                    // LA NOTIFICATION GAME OVER
-                    if (squares[ghost.currentIndex].classList.contains('pac-man')) {
-                        alert("GAME OVER"); // Alerte du navigateur
-                        gameOver();
-                    }
-                }, ghost.speed);
-                ghostIntervals.push(interval);
-            }
         }
 
-        function gameOver() {
-            ghostIntervals.forEach(clearInterval);
-            document.removeEventListener('keydown', movePacman);
-            document.getElementById('game-over-screen').style.display = 'flex';
+        function moveGhost(ghost) {
+            const interval = setInterval(() => {
+                const px = pacmanIndex % width;
+                const py = Math.floor(pacmanIndex / width);
+                let gx = ghost.index % width;
+                let gy = Math.floor(ghost.index / width);
+
+                let nextIndex = ghost.index;
+                if (gx < px && !squares[ghost.index + 1].classList.contains('wall')) nextIndex++;
+                else if (gx > px && !squares[ghost.index - 1].classList.contains('wall')) nextIndex--;
+                else if (gy < py && !squares[ghost.index + width].classList.contains('wall')) nextIndex += width;
+                else if (gy > py && !squares[ghost.index - width].classList.contains('wall')) nextIndex -= width;
+
+                squares[ghost.index].classList.remove('ghost');
+                ghost.index = nextIndex;
+                squares[ghost.index].classList.add('ghost');
+
+                if (squares[ghost.index].classList.contains('pac-man')) {
+                    alert("GAME OVER"); // NOTIFICATION FLASH
+                    location.reload(); // RECHARGE POUR REESSAYER
+                }
+            }, ghost.speed);
+            ghostIntervals.push(interval);
         }
 
         function movePacman(e) {
