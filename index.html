@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>Mehdi Pacman - Version Finale</title>
+    <title>Mehdi Pacman - Cyber Meute</title>
     <style>
         body {
             background-color: #000;
@@ -55,7 +55,7 @@
             display: flex;
             flex-wrap: wrap;
             width: 621px; 
-            height: 378px; /* Ajusté pour le layout */
+            height: 378px;
             border: 8px solid #2222ff;
             background-color: #000;
         }
@@ -70,17 +70,16 @@
             border-radius: 50%; 
             box-shadow: 0 0 10px #ffff00; 
             z-index: 10; 
-            position: relative;
         }
 
         .ghost { 
-            background-image: url('https://i.imgur.com/399S860.png'); /* Image de fantôme propre */
-            background-size: contain;
+            /* Utilisation d'un sprite de fantôme classique transparent */
+            background-image: url('https://upload.wikimedia.org/wikipedia/commons/d/d3/Pacman_Ghost.png');
+            background-size: 80%; /* Pour qu'il ne touche pas les bords des murs */
             background-repeat: no-repeat;
             background-position: center;
             background-color: transparent !important;
             z-index: 5;
-            position: relative;
         }
 
         .score-text { font-size: 40px; margin-bottom: 10px; color: #ffff00; }
@@ -156,10 +155,11 @@
                 }
             }
 
+            // Placement des fantômes classiques
             const ghosts = [
-                new Ghost(30, 400),
-                new Ghost(40, 450),
-                new Ghost(150, 500)
+                new Ghost(30, 350),
+                new Ghost(40, 400),
+                new Ghost(150, 450)
             ];
 
             ghosts.forEach(ghost => {
@@ -184,6 +184,7 @@
                     ghost.currentIndex = nextIndex;
                     squares[ghost.currentIndex].classList.add('ghost');
 
+                    // Détection collision
                     if (squares[ghost.currentIndex].classList.contains('pac-man')) {
                         alert("GAME OVER !");
                         gameOver();
