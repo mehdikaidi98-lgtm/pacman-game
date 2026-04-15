@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>Mehdi Pacman - Version Ghost Fix</title>
+    <title>Mehdi Pacman - Cyber Meute</title>
     <style>
         body {
             background-color: #000;
@@ -55,40 +55,21 @@
 
         .grid div { width: 27px; height: 27px; position: relative; }
         .wall { background-color: #0a0a5e; border: 1px solid #1a1aff; }
+        
+        /* Uniquement les petites pastilles classiques */
         .dot { background-color: #ffb8ae; border: 11px solid #000; border-radius: 50%; }
 
-        /* PACMAN */
         .pac-man { background-color: #ffff00; border-radius: 50%; z-index: 10; }
 
-        /* DESIGN DES FANTÔMES SANS IMAGE (POUR ÊTRE SÛR QUE ÇA MARCHE) */
-        .ghost {
-            z-index: 20;
-            background-color: #ff0000; /* Rouge classique */
-            border-radius: 13px 13px 0 0;
-            position: relative;
-        }
-        /* Les yeux des fantômes */
-        .ghost::before {
-            content: '● ●';
-            color: white;
-            font-size: 10px;
-            position: absolute;
-            top: 5px;
-            left: 3px;
-            letter-spacing: 2px;
-        }
-        /* Le bas dentelé du fantôme */
-        .ghost::after {
-            content: '';
-            position: absolute;
-            bottom: -2px;
-            left: 0;
-            width: 100%;
-            height: 5px;
-            background-image: linear-gradient(135deg, transparent 25%, #ff0000 25%), 
-                              linear-gradient(225deg, transparent 25%, #ff0000 25%);
-            background-size: 9px 10px;
-        }
+        /* STYLE DES FANTÔMES CLASSIQUES */
+        .ghost { z-index: 20; border-radius: 13px 13px 0 0; position: relative; }
+        .ghost::before { content: '● ●'; color: white; font-size: 8px; position: absolute; top: 4px; left: 4px; letter-spacing: 2px; }
+        .ghost::after { content: ''; position: absolute; bottom: 0; left: 0; width: 100%; height: 4px; background-image: radial-gradient(circle, transparent 40%, currentColor 41%); background-size: 7px 8px; background-repeat: repeat-x; }
+
+        .blinky { background-color: #ff0000; color: #ff0000; }
+        .pinky { background-color: #ffb8ff; color: #ffb8ff; }
+        .inky { background-color: #00ffff; color: #00ffff; }
+        .clyde { background-color: #ffb851; color: #ffb851; }
 
         .score-text { font-size: 30px; color: #ffff00; }
     </style>
@@ -119,6 +100,7 @@
         let squares = [];
         let ghostIntervals = [];
 
+        // Que des 0 (petits ronds) et des 1 (murs)
         const layout = [
             1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
             1,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,1,
@@ -151,13 +133,14 @@
             document.addEventListener('keydown', movePacman);
 
             const ghosts = [
-                { index: 30, speed: 400 },
-                { index: 40, speed: 450 },
-                { index: 150, speed: 500 }
+                { index: 24, speed: 300, class: 'blinky' },
+                { index: 44, speed: 400, class: 'pinky' },
+                { index: 228, speed: 450, class: 'inky' },
+                { index: 21, speed: 500, class: 'clyde' }
             ];
 
             ghosts.forEach(ghost => {
-                squares[ghost.index].classList.add('ghost');
+                squares[ghost.index].classList.add('ghost', ghost.class);
                 moveGhost(ghost);
             });
         }
@@ -175,13 +158,13 @@
                 else if (gy < py && !squares[ghost.index + width].classList.contains('wall')) nextIndex += width;
                 else if (gy > py && !squares[ghost.index - width].classList.contains('wall')) nextIndex -= width;
 
-                squares[ghost.index].classList.remove('ghost');
+                squares[ghost.index].classList.remove('ghost', ghost.class);
                 ghost.index = nextIndex;
-                squares[ghost.index].classList.add('ghost');
+                squares[ghost.index].classList.add('ghost', ghost.class);
 
                 if (squares[ghost.index].classList.contains('pac-man')) {
-                    alert("GAME OVER"); // NOTIFICATION FLASH
-                    location.reload(); // RECHARGE POUR REESSAYER
+                    alert("GAME OVER !");
+                    location.reload();
                 }
             }, ghost.speed);
             ghostIntervals.push(interval);
