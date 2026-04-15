@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>Mehdi Pacman - Cyber Meute</title>
+    <title>Mehdi Pacman - Version Finale</title>
     <style>
         body {
             background-color: #000;
@@ -17,20 +17,21 @@
             overflow: hidden;
         }
 
+        /* --- ÉCRANS --- */
         #start-screen, #game-over-screen {
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
             position: absolute;
-            z-index: 10;
+            z-index: 20;
             background: rgba(0,0,0,0.95);
             width: 100%;
             height: 100%;
         }
 
         #game-over-screen { display: none; text-align: center; }
-        h1 { font-size: 60px; text-shadow: 0 0 20px currentColor; }
+        h1 { font-size: 60px; text-shadow: 0 0 20px currentColor; margin-bottom: 20px; }
         .yellow { color: #ffff00; }
         .red { color: #ff0000; }
 
@@ -44,25 +45,42 @@
             cursor: pointer;
             font-weight: bold;
             box-shadow: 0 0 15px currentColor;
-            margin-top: 20px;
+            transition: 0.3s;
+        }
+        .btn:hover { transform: scale(1.1); }
+
+        /* --- PLATEAU --- */
+        #game-container { display: none; flex-direction: column; align-items: center; }
+        .grid {
+            display: flex;
+            flex-wrap: wrap;
+            width: 621px; 
+            height: 378px; /* Ajusté pour le layout */
+            border: 8px solid #2222ff;
+            background-color: #000;
         }
 
-        #game-container { display: none; flex-direction: column; align-items: center; }
-        .grid { display: flex; flex-wrap: wrap; width: 621px; height: 405px; border: 8px solid #2222ff; box-shadow: 0 0 30px #2222ff; }
-        .grid div { width: 27px; height: 27px; position: relative; }
-        .wall { background-color: #0a0a5e; border: 2px solid #1a1aff; box-sizing: border-box; }
+        .grid div { width: 27px; height: 27px; box-sizing: border-box; }
+        .wall { background-color: #0a0a5e; border: 2px solid #1a1aff; }
         .dot { background-color: #ffb8ae; border: 11px solid #000; border-radius: 50%; }
 
-        /* PACMAN */
-        .pac-man { background-color: #ffff00; border-radius: 50%; box-shadow: 0 0 15px #ffff00; z-index: 5; }
+        /* PERSONNAGES */
+        .pac-man { 
+            background-color: #ffff00; 
+            border-radius: 50%; 
+            box-shadow: 0 0 10px #ffff00; 
+            z-index: 10; 
+            position: relative;
+        }
 
-        /* FANTÔMES AVEC IMAGE */
         .ghost { 
-            background-image: url('https://m.media-amazon.com/images/I/41-lSAtN7zL._AC_.jpg'); /* Tu peux changer ce lien par ton image */
+            background-image: url('https://i.imgur.com/399S860.png'); /* Image de fantôme propre */
             background-size: contain;
             background-repeat: no-repeat;
             background-position: center;
-            z-index: 4; 
+            background-color: transparent !important;
+            z-index: 5;
+            position: relative;
         }
 
         .score-text { font-size: 40px; margin-bottom: 10px; color: #ffff00; }
@@ -80,7 +98,7 @@
     </div>
 
     <div id="game-over-screen">
-        <h1 class="red">GAME OVER<br>JE T AIMME PASSSSSSSS</h1>
+        <h1 class="red">GAME OVER</h1>
         <button class="btn red" onclick="location.reload()">REESSAYER</button>
     </div>
 
@@ -112,7 +130,6 @@
             1,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,1,
             1,0,1,1,1,0,1,1,1,1,0,1,0,1,1,1,1,0,1,1,1,0,1,
             1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,
-            1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,
             1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1
         ];
 
@@ -134,19 +151,15 @@
 
             class Ghost {
                 constructor(startIndex, speed) {
-                    this.startIndex = startIndex;
-                    this.speed = speed;
                     this.currentIndex = startIndex;
+                    this.speed = speed;
                 }
             }
 
-            // Les 5 fantômes partent tous du même endroit (le milieu)
             const ghosts = [
-                new Ghost(149, 300),
-                new Ghost(149, 320),
-                new Ghost(149, 340),
-                new Ghost(149, 360),
-                new Ghost(149, 380)
+                new Ghost(30, 400),
+                new Ghost(40, 450),
+                new Ghost(150, 500)
             ];
 
             ghosts.forEach(ghost => {
@@ -172,7 +185,7 @@
                     squares[ghost.currentIndex].classList.add('ghost');
 
                     if (squares[ghost.currentIndex].classList.contains('pac-man')) {
-                        alert("GAME OVER"); // LA NOTIFICATION
+                        alert("GAME OVER !");
                         gameOver();
                     }
                 }, ghost.speed);
@@ -184,7 +197,6 @@
             ghostIntervals.forEach(clearInterval);
             document.removeEventListener('keydown', movePacman);
             document.getElementById('game-over-screen').style.display = 'flex';
-            music.pause();
         }
 
         function movePacman(e) {
