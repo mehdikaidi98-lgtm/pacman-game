@@ -72,10 +72,11 @@
             z-index: 10; 
         }
 
+        /* --- NOUVEAU STYLE GHOST CLASSIQUE (Translucide) --- */
         .ghost { 
-            /* Utilisation d'un sprite de fantôme classique transparent */
-            background-image: url('https://upload.wikimedia.org/wikipedia/commons/d/d3/Pacman_Ghost.png');
-            background-size: 80%; /* Pour qu'il ne touche pas les bords des murs */
+            /* J'ai utilisé une banque d'images pour trouver ce fantôme classique */
+            background-image: url('https://upload.wikimedia.org/wikipedia/commons/2/23/Pac_man_ghosts.png');
+            background-size: contain;
             background-repeat: no-repeat;
             background-position: center;
             background-color: transparent !important;
@@ -157,9 +158,9 @@
 
             // Placement des fantômes classiques
             const ghosts = [
-                new Ghost(30, 350),
-                new Ghost(40, 400),
-                new Ghost(150, 450)
+                new Ghost(30, 400),
+                new Ghost(40, 450),
+                new Ghost(150, 500)
             ];
 
             ghosts.forEach(ghost => {
@@ -184,9 +185,9 @@
                     ghost.currentIndex = nextIndex;
                     squares[ghost.currentIndex].classList.add('ghost');
 
-                    // Détection collision
+                    // LA NOTIFICATION GAME OVER
                     if (squares[ghost.currentIndex].classList.contains('pac-man')) {
-                        alert("GAME OVER !");
+                        alert("GAME OVER"); // Alerte du navigateur
                         gameOver();
                     }
                 }, ghost.speed);
